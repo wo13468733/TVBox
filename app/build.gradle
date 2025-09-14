@@ -67,12 +67,7 @@ android {
         abortOnError false
     }
 
-    dexOptions {
-        javaMaxHeapSize "4g"
-        additionalParameters += '--multi-dex'
-        additionalParameters += '--set-max-idx-number=48000'
-        additionalParameters += '--minimal-main-dex'
-    }
+    
 
     // 多渠道 APK 文件命名
     applicationVariants.configureEach { variant ->
