@@ -27,7 +27,12 @@ jobs:
         distribution: temurin
         java-version: 11
 
-    - name: Set up Android SDK
+    - name: Install Python 3
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y python3 python3-pip
+
+    - name: Set up Android SDK & NDK
       uses: android-actions/setup-android@v2
       with:
         api-level: 33
@@ -42,6 +47,11 @@ jobs:
     - name: Grant Gradle executable permission
       run: chmod +x ./gradlew
 
+    - name: Configure Chaquopy Python path
+      run: |
+        # Linux 下 Chaquopy 指向 Python3
+        sed -i '/chaquopy {/a \    python {\n        buildPython "/usr/bin/python3"\n    }' app/build.gradle
+
     - name: Clean and assemble all release APKs
       run: ./gradlew clean assembleRelease --stacktrace
 
@@ -52,11 +62,9 @@ jobs:
         for apk in app/build/outputs/apk/*/*/*.apk; do
           build_type=$(basename $(dirname $apk))
           flavor=$(basename $(dirname $(dirname $apk)))
-          # 如果 flavor 文件夹是 buildType，则置为空
           if [ "$flavor" == "$build_type" ]; then
             flavor=""
           fi
-          # 自动生成文件名
           if [ -z "$flavor" ]; then
             newname="TVBox_${build_type}.apk"
           else
