@@ -19,16 +19,16 @@ jobs:
 
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v3
 
     - name: Set up JDK
-      uses: actions/setup-java@v4
+      uses: actions/setup-java@v3
       with:
         distribution: temurin
         java-version: 11
 
     - name: Download Android SDK
-      uses: android-actions/setup-android@v4
+      uses: android-actions/setup-android@v2
       with:
         api-level: 33
         build-tools: 33.0.2
@@ -50,7 +50,6 @@ jobs:
         mkdir -p release-apks
         for apk in app/build/outputs/apk/release/*.apk; do
           base=$(basename $apk)
-          # Extract flavor from build.gradle outputFileName pattern
           if [[ $base == *"-normal.apk" ]]; then
             mv "$apk" "release-apks/TVBox_release-java.apk"
           elif [[ $base == *"-python.apk" ]]; then
