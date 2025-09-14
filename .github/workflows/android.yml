@@ -10,7 +10,7 @@ on:
 
 jobs:
   build:
-    name: Build Release APK
+    name: Build All APKs
     runs-on: ubuntu-latest
 
     env:
@@ -27,7 +27,7 @@ jobs:
         distribution: temurin
         java-version: 11
 
-    - name: Download Android SDK
+    - name: Set up Android SDK
       uses: android-actions/setup-android@v2
       with:
         api-level: 33
@@ -39,27 +39,33 @@ jobs:
         echo "sdk.dir=${ANDROID_SDK_ROOT}" > local.properties
         echo "ndk.dir=${ANDROID_SDK_ROOT}/ndk/25.2.9519653" >> local.properties
 
-    - name: Grant Gradle executable permissions
+    - name: Grant Gradle executable permission
       run: chmod +x ./gradlew
 
-    - name: Clean and assemble release APK
+    - name: Clean and assemble all release APKs
       run: ./gradlew clean assembleRelease --stacktrace
 
-    - name: Rename APKs according to flavor and buildType
+    - name: Collect and rename all APKs
       run: |
         mkdir -p release-apks
-        for apk in app/build/outputs/apk/release/*.apk; do
-          base=$(basename $apk)
-          if [[ $base == *"-normal.apk" ]]; then
-            mv "$apk" "release-apks/TVBox_release-java.apk"
-          elif [[ $base == *"-python.apk" ]]; then
-            mv "$apk" "release-apks/TVBox_release-python.apk"
-          else
-            mv "$apk" "release-apks/$base"
+        shopt -s nullglob
+        for apk in app/build/outputs/apk/*/*/*.apk; do
+          build_type=$(basename $(dirname $apk))
+          flavor=$(basename $(dirname $(dirname $apk)))
+          # 如果 flavor 文件夹是 buildType，则置为空
+          if [ "$flavor" == "$build_type" ]; then
+            flavor=""
           fi
+          # 自动生成文件名
+          if [ -z "$flavor" ]; then
+            newname="TVBox_${build_type}.apk"
+          else
+            newname="TVBox_${build_type}-${flavor}.apk"
+          fi
+          mv "$apk" "release-apks/$newname"
         done
 
-    - name: Upload APK artifacts
+    - name: Upload all APK artifacts
       uses: actions/upload-artifact@v4
       with:
         name: TVBox-APK
